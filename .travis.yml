@@ -1,0 +1,28 @@
+language:
+  - generic
+
+os:
+  - linux
+
+dist:
+  - xenial
+
+services:
+  - docker
+
+before_install:
+  - docker build -t purporz/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true purporz/react-test npm test
+
+after_success:
+  - docker build -t purporz/multi-client ./client
+  - docker build -t purporz/multi-nginx ./nginx
+  - docker build -t purporz/multi-server ./server
+  - docker build -t purporz/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push purporz/multi-client
+  - docker push purporz/multi-nginx
+  - docker push purporz/multi-server
+  - docker push purporz/multi-worker
